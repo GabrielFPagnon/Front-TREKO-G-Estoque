@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
-// --- PROVA DE VIDA ---
-// Se você não vir isso no console do navegador (F12), o arquivo não é este.
-console.log("--- PROVA DE VIDA: App.jsx LIMPO (v2) CARREGADO ---");
-
-// --- CONFIGURAÇÃO DO AXIOS ---
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // O endereço do nosso back-end
-  timeout: 5000 // Timeout de 5 segundos
+  baseURL: 'http://localhost:8080/api', 
+  timeout: 5000 
 });
 
 const API_URL_LOGIN = 'http://localhost:8080/api/login';
 
-// --- COMPONENTE DE LOGIN ---
+/*
+    Formulário de Login
+*/
 function LoginForm({ onLogin }) {
   const [codigo, setCodigo] = useState('');
   const [nome, setNome] = useState('');
@@ -40,16 +37,14 @@ function LoginForm({ onLogin }) {
       });
       
       console.log('Login efetuado com sucesso!', response.data);
-      onLogin(true); // <--- Isso é o que muda a tela!
+      onLogin(true); 
 
     } catch (err) {
       console.error('Erro de Login:', err);
       let errorMessage = 'Não foi possível conectar ao servidor.';
       if (err.response) {
-        // O servidor respondeu com um erro (401, 500)
         errorMessage = err.response.data?.message || 'Credenciais inválidas.';
       } else if (err.request) {
-        // A requisição foi feita, mas não houve resposta (back-end offline?)
         errorMessage = 'Servidor não respondeu. O back-end está rodando?';
       }
       setError(errorMessage);
@@ -61,20 +56,16 @@ function LoginForm({ onLogin }) {
   return (
     <form className="p-6 space-y-5" onSubmit={handleSubmit}>
       <div className="text-center pb-2">
-        {/* --- LOGO ADICIONADA (Substituindo o H2) --- */}
         <img 
             src="/logomini.png" 
             alt="Logo Treko"
-            className="w-20 h-20 mx-auto object-cover rounded-full shadow-lg border-2 border-green-600 p-1"
-            // Fallback: Se a imagem falhar, mostra o placeholder
+            className="w-20 h-20 mx-auto object-cover rounded-full shadow-lg border-2 border-blue-600 p-1"
             onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }}
         />
-        {/* Placeholder de Fallback (invisível por padrão) */}
         <div style={{ display: 'none' }} className="w-20 h-20 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
             <span className="text-xl text-gray-600">LOGO</span>
         </div>
-        <p className="text-sm text-gray-500 mt-2">Gestão de Estoque</p>
-        {/* --- FIM DA ADIÇÃO --- */}
+        <p className="text-sm text-blue-600 mt-2">TREKO-Gestão de estoque</p>
       </div>
       <div className="space-y-3">
         <input
@@ -99,32 +90,44 @@ function LoginForm({ onLogin }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600"
         />
       </div>
       {error && <p className="text-red-500 text-center text-sm">{error}</p>}
       <button
         type="submit"
-        className="w-full py-3 text-white font-semibold rounded-lg shadow-md transition duration-200 bg-blue-600 hover:bg-green-700 disabled:opacity-50"
+        className="w-full py-3 text-white font-semibold rounded-lg shadow-md transition duration-200 bg-green-600 hover:bg-green-900 disabled:opacity-50"
         disabled={isLoading}
       >
         {isLoading ? 'Acessando...' : 'Entrar'}
       </button>
     </form>
   );
-}
 
+}
+/*
+imagem de fundo e container de login
+*/
 function LoginContainer({ onLogin }) {
+  const backgroundImageUrl = '../public/background_imagem.png';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
+      style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+      <div className="w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden z-10">
         <LoginForm onLogin={onLogin} />
       </div>
     </div>
   );
 }
 
-// --- COMPONENTE DO CRUD (O APP PRINCIPAL) ---
+/*
+    Gerenciador de Produtos
+*/
 function GerenciadorDeProdutos() {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +136,6 @@ function GerenciadorDeProdutos() {
   const [produtoEditando, setProdutoEditando] = useState(null);
   const [termoBusca, setTermoBusca] = useState('');
 
-  // 1. READ (Buscar Produtos)
   useEffect(() => {
     const fetchProdutos = async () => {
       setLoading(true);
@@ -151,7 +153,6 @@ function GerenciadorDeProdutos() {
     fetchProdutos();
   }, []);
 
-  // 2. PESQUISAR (Filtro local)
   const produtosFiltrados = useMemo(() => {
     if (!termoBusca) return produtos;
     return produtos.filter(
@@ -166,7 +167,6 @@ function GerenciadorDeProdutos() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 3. CREATE / UPDATE (Cadastrar e Editar)
   const handleSubmit = async (e) => {
     e.preventDefault();
     const dadosProduto = {
@@ -182,24 +182,21 @@ function GerenciadorDeProdutos() {
 
     try {
       if (produtoEditando) {
-        // UPDATE (Editar)
         const response = await api.put(`/produtos/${produtoEditando.id}`, dadosProduto);
         setProdutos(
           produtos.map((p) => (p.id === produtoEditando.id ? response.data : p))
         );
       } else {
-        // CREATE (Cadastrar)
         const response = await api.post('/produtos', dadosProduto);
         setProdutos([response.data, ...produtos]);
       }
-      cancelarEdicao(); // Limpa o formulário
+      cancelarEdicao(); 
     } catch (err) {
       console.error('Erro ao salvar produto:', err);
       setError(err.response?.data?.error || 'Erro ao salvar produto.');
     }
   };
 
-  // 4. DELETE (Excluir)
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
       try {
@@ -211,7 +208,9 @@ function GerenciadorDeProdutos() {
       }
     }
   };
-
+/*
+    Edição de um produto existente
+*/
   const iniciarEdicao = (produto) => {
     setProdutoEditando(produto);
     setFormData({
@@ -229,7 +228,6 @@ function GerenciadorDeProdutos() {
 
   return (
     <main className="flex flex-col md:flex-row gap-8 p-6 flex-grow max-w-7xl w-full mx-auto">
-      {/* --- FORMULÁRIO --- */}
       <div className="w-full md:w-1/3">
         <form
           onSubmit={handleSubmit}
@@ -241,18 +239,18 @@ function GerenciadorDeProdutos() {
           <input
             type="text" name="nome" placeholder="Nome do Produto"
             value={formData.nome} onChange={handleFormChange} required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
           <textarea
             name="descricao" placeholder="Descrição"
             value={formData.descricao} onChange={handleFormChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
           <input
             type="number" name="preco" placeholder="Preço (ex: 19.99)"
             value={formData.preco} onChange={handleFormChange}
             step="0.01" min="0.01" required
-        	className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        	className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
           />
           <div className="flex gap-2">
             <button
@@ -273,7 +271,6 @@ function GerenciadorDeProdutos() {
         </form>
       </div>
 
-      {/* --- LISTA E PESQUISA --- */}
       <div className="w-full md:w-2/3 bg-white p-6 shadow-xl rounded-xl">
       	<h2 className="text-2xl font-semibold mb-4 text-gray-700">
           Produtos em Estoque ({produtosFiltrados.length})
@@ -327,16 +324,11 @@ function GerenciadorDeProdutos() {
     </main>
   );
 }
-
-// --- COMPONENTE PRINCIPAL APP ---
+/*    
+    Componente App principal
+*/
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // --- TESTE DE HOTWIRE (Pular Login) ---
-  // Descomente a linha abaixo para pular o login e ir direto para o CRUD
-  // useEffect(() => { setIsLoggedIn(true); }, []);
-  // --- FIM DO TESTE ---
-
   const handleLogout = () => {
     setIsLoggedIn(false);
   };
@@ -345,7 +337,6 @@ function App() {
     return <LoginContainer onLogin={setIsLoggedIn} />;
   }
 
-  // Layout principal após o login
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <header className="bg-green-600 text-white p-4 shadow-lg flex justify-between items-center">
